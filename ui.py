@@ -249,9 +249,6 @@ class ChallengerPage(tk.Frame):
         image = image.resize((250, 250), Image.ANTIALIAS)  # The (250, 250) is (height, width)
         return ImageTk.PhotoImage(image)
 
-    def printWord(self):
-        return "-".join(i for i in range(0, len(self.text)+1))
-
 
 
 class LosePage(tk.Frame):
