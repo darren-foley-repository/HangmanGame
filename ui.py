@@ -17,7 +17,7 @@ class HangmanApp(tk.Tk):
 
         self.frames = {}
 
-        for F in (StartPage, HostPage, ChallengerPage):
+        for F in (StartPage, HostPage, ChallengerPage, LosePage, WinPage):
 
             frame = F(container, self)
 
@@ -32,14 +32,18 @@ class HangmanApp(tk.Tk):
             frame = self.frames[cont]
             frame.tkraise()
             self.counter -= 1
-        elif self.counter == 2:  # Call from StartPage init
+        elif self.counter == 2:
             frame = self.frames[cont]
             frame.tkraise()
             self.counter -= 1
-        elif self.counter == 1:  # Call from HostPage init, word validation in here?
-            frame = self.frames[cont]
-            frame.tkraise()
-            self.counter -= 1
+        elif self.counter == 1:
+            if self.checkHostWord() == False:
+                frame = self.frames[HostPage]
+                frame.tkraise()
+            else:
+                frame = self.frames[cont]
+                frame.tkraise()
+                self.counter -= 1
         else:  # Call from ChallengerPage init
             frame = self.frames[cont]
             self.checkLetterGuess()
@@ -56,12 +60,12 @@ class HangmanApp(tk.Tk):
 
     def updateHangmanImage(self):
         number_of_guesses = len(self.pastGuessIncorrect)
+
         my_frame = self.frames[ChallengerPage]
         my_frame.my_image_number = number_of_guesses
 
         # change image
         my_frame.canvas.itemconfig(my_frame.image_on_canvas, image=my_frame.my_images[my_frame.my_image_number])
-
 
 
     def updateWordLabel(self):
@@ -73,8 +77,9 @@ class HangmanApp(tk.Tk):
             if letter in self.pastGuessCorrect:
                 temp += letter
             else:
-                temp = "-"
-        self.frames[ChallengerPage].word_label = temp
+                temp += "-"
+        #self.frames[ChallengerPage].word_label = tk.Label(self.frames[ChallengerPage], text=temp)
+        self.frames[ChallengerPage].text.set(temp)
 
     def checkHostWord(self):
         """
@@ -86,6 +91,8 @@ class HangmanApp(tk.Tk):
                 continue
             else:
                 print("This is not a valid word! Try again")
+                return False
+        return True
 
 
     def checkLetterGuess(self):
@@ -208,7 +215,8 @@ class ChallengerPage(tk.Frame):
 
         self.image_on_canvas = self.canvas.create_image(0, 0, anchor=tk.NW, image=self.my_images[self.my_image_number])
 
-        self.word_label = tk.Label(self, text="None")
+        self.text = tk.StringVar()
+        self.word_label = tk.Label(self, textvariable=self.text)
         self.word_label.grid(row=3, column=0)
 
         button = tk.Button(self, text="SUBMIT", command=lambda: controller.show_frame(ChallengerPage))
@@ -219,6 +227,32 @@ class ChallengerPage(tk.Frame):
         image = Image.open(image_path)
         image = image.resize((250, 250), Image.ANTIALIAS)  # The (250, 250) is (height, width)
         return ImageTk.PhotoImage(image)
+
+    def printWord(self):
+        return "-".join(i for i in range(0, len(self.text)+1))
+
+
+
+class LosePage(tk.Frame):
+
+    def __init__(self, parent, controller):
+        tk.Frame.__init__(self, parent)
+        self.controller = controller
+
+        label = tk.Label(self, text="You've been hung. You lose!!")
+        label.grid(row=0, column=0)
+
+
+
+
+class WinPage(tk.Frame):
+
+    def __init__(self, parent, controller):
+        tk.Frame.__init__(self, parent)
+        self.controller = controller
+
+
+
 
 
 if __name__ == "__main__":
