@@ -2,6 +2,14 @@ import tkinter as tk
 #from application import Hangman
 from PIL import Image, ImageTk
 
+
+class GameWon(Exception):
+    """
+    Custom Exception for the end of the game
+    """
+    pass
+
+
 class HangmanApp(tk.Tk):
 
     def __init__(self, *args, **kwargs):
@@ -45,18 +53,20 @@ class HangmanApp(tk.Tk):
                 frame.tkraise()
                 self.counter -= 1
         else:  # Call from ChallengerPage init
-            frame = self.frames[cont]
-            self.checkLetterGuess()
-            self.updateHangmanImage()
-            self.updateWordLabel()
-
-            frame.tkraise()
-            # More checks and validation here
-
-            #print(self.get_challenger_name())
-            #print(self.get_host_name())
-            #print(self.get_secret_word())
-            #print(self.get_challenger_guess())
+            try:
+                frame = self.frames[cont]
+                self.checkLetterGuess()
+                self.updateHangmanImage()
+                self.updateWordLabel()
+                frame.tkraise()
+            except IndexError as e:
+                print("Game has ended")
+                frame = self.frames[LosePage]
+                frame.tkraise()
+            except GameWon as e:
+                print("Challenger has won the game!")
+                frame = self.frames[WinPage]
+                frame.tkraise()
 
     def updateHangmanImage(self):
         number_of_guesses = len(self.pastGuessIncorrect)
@@ -104,6 +114,7 @@ class HangmanApp(tk.Tk):
             if letter in word.lower():
                 print("Well done, that was a correct guess!")
                 self.updateCorrectGuess(letter)
+                self.checkIfGameComplete()
             else:
                 print("That was not a correct guess")
                 self.updateIncorrectGuess(letter)
@@ -128,6 +139,16 @@ class HangmanApp(tk.Tk):
 
     def updateCorrectGuess(self, letter):
         self.pastGuessCorrect.append(letter)
+
+    def checkIfGameComplete(self):
+        if set(self.pastGuessCorrect) == set(self.get_secret_word().lower()):
+            """
+            If the set of correct past guesses equals the set of letters of the hosts word then challenger wins. 
+            Raise a "GameWon" Exception to end the game.
+            """
+            print("Game Won!")
+            raise GameWon
+
 
 
 
@@ -239,8 +260,11 @@ class LosePage(tk.Frame):
         tk.Frame.__init__(self, parent)
         self.controller = controller
 
-        label = tk.Label(self, text="You've been hung. You lose!!")
+        label = tk.Label(self, text="You've been hung!!!! You lose!!")
         label.grid(row=0, column=0)
+
+        button = tk.Button(self, text="EXIT", command=lambda: controller.destroy())
+        button.grid()
 
 
 
@@ -250,6 +274,12 @@ class WinPage(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
         self.controller = controller
+
+        label = tk.Label(self, text="Well done! You beat the host!")
+        label.grid(row=0, column=0)
+
+        button = tk.Button(self, text="EXIT", command=lambda: controller.destroy())
+        button.grid()
 
 
 
